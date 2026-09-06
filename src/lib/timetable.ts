@@ -38,10 +38,6 @@ export type TimetableData = {
 
 export type TimetableView = "class" | "room" | "teacher";
 
-export function timetableHref(view: TimetableView, value: string): string {
-  return `/timetable?${new URLSearchParams({ [view]: value })}`;
-}
-
 export function compareClasses(a: string, b: string): number {
   // Keep years and class letters together: T1.A, P1.B, S1.C, P2.A, ...
   return a.slice(1).localeCompare(b.slice(1), "cs", { numeric: true }) ||

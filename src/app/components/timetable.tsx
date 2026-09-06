@@ -1,8 +1,9 @@
 import Link from "next/link";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { faComputer } from "@fortawesome/free-solid-svg-icons"
 import {
   buildTimetableGrid,
   PERIODS,
-  timetableHref,
   WEEKDAYS,
   getGroupColor,
   type TimetableLesson,
@@ -18,7 +19,6 @@ type TimetableProps = {
 };
 
 export default function Timetable({
-  title,
   lessons,
   view = "class",
 }: TimetableProps) {
@@ -26,11 +26,13 @@ export default function Timetable({
 
   return (
     <div className="mt-4 flex min-w-0 max-w-full flex-col gap-4 sm:mt-8 lg:flex-row lg:items-start">
-      <div className="min-w-0 w-full max-w-full flex-1 overflow-x-auto overscroll-x-contain rounded-lg border-slate-500 border text-center" role="region" aria-label={title} tabIndex={0}>
+      <div className="min-w-0 w-full max-w-full flex-1 overflow-x-auto overscroll-x-contain rounded-lg border-slate-500 border text-center" role="region" tabIndex={0}>
         <table className="bg-slate-900 w-full min-w-190 table-fixed border-collapse text-center text-sm sm:min-w-232 sm:text-base">
           <thead className={"bg-slate-700"}>
             <tr>
-                <th scope="col" className="sticky left-0 z-1 w-12 border-slate-500 border-r bg-slate-700 sm:w-16"><span className="sr-only">Day</span></th>
+                <th scope="col" className="sticky left-0 z-1 w-12 border-slate-500 border-r bg-slate-700 sm:w-16">
+                  <span className="sr-only">Day</span>
+                </th>
                 {PERIODS.map(([start, end], index) => (
                     <th scope="col" key={start} className="border-r border-slate-500 px-1 py-1 text-center last:border-r-0 sm:px-2 sm:py-2">
                         <span className={"block"}>{index + 1}.</span>
@@ -53,18 +55,21 @@ export default function Timetable({
                         {cell.map((lesson) => (
                           <div key={lesson.id} className={`relative flex min-h-0 flex-col items-center justify-center px-1 pt-3 pb-1 text-sm sm:px-2 sm:pt-4 ${lesson.subject === "oběd" || lesson.subject === "" ? "bg-slate-900" : "bg-slate-800"}`}>
                             {lesson.group !== null && (
-                              <span className={`absolute top-0.5 left-1 text-[9px] leading-3 sm:top-1 sm:left-1 sm:text-[10px] rounded p-0.5 ${getGroupColor(lesson.group)}`}>
+                              <span title={`Group ${lesson.group}`} className={`absolute left-1 text-[9px] leading-3 sm:top-1 sm:left-1 sm:text-[10px] rounded p-0.5 ${getGroupColor(lesson.group)}`}>
                                 {lesson.group}.
                               </span>
                             )}
                             {lesson.room && (
-                              <Link
-                                className={`absolute top-0.5 right-1 text-[9px] leading-3 sm:top-1 sm:right-1 sm:text-[10px] rounded p-0.5 bg-gray-600/40`}
-                                prefetch={false}
-                                href={timetableHref("room", lesson.room)}
-                              >
-                                {lesson.room}
-                              </Link>
+                                <span
+                                    title={`Room ${lesson.room}`}
+                                    className="absolute inline-flex items-center gap-1 text-[9px] leading-3 top-1 sm:right-1 sm:text-[10px] rounded p-0.5 bg-gray-600/40"
+                                >
+                                    <FontAwesomeIcon
+                                    icon={faComputer}
+                                    className="shrink-0 w-2.5"
+                                    />
+                                    <span>{lesson.room}</span>
+                                </span>
                             )}
                             <strong className="text-sm leading-4 font-semibold sm:text-base sm:leading-5" title={lesson.subjectName ?? undefined}>
                               {lesson.subject === "oběd" ? "" : lesson.subject}
@@ -73,7 +78,7 @@ export default function Timetable({
                               <Link
                                 className="text-[11px] leading-3 hover:underline sm:text-xs sm:leading-4 text-slate-300"
                                 prefetch={false}
-                                href={timetableHref("teacher", lesson.teacher)}
+                                href={"/teachers/" + lesson.teacher}
                                 title={lesson.teacherName ?? undefined}
                               >
                                 {lesson.teacher}
