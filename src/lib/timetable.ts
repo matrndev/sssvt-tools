@@ -15,6 +15,7 @@ export const PERIODS = [
 export type TimetableLesson = {
   id: string;
   classCode: string;
+  homeClassroom: string | null;
   weekday: number;
   period: number;
   subject: string;
@@ -23,8 +24,44 @@ export type TimetableLesson = {
   teacherName: string | null;
   room: string | null;
   isComputerRoom: boolean;
+  requiresRoomTransfer: boolean;
   group: number | null;
 };
+
+export type LessonRoom = Pick<TimetableLesson, "id" | "classCode" | "weekday" | "period" | "group" | "room">;
+
+export function getRoomTransfers(lessons: LessonRoom[]): Set<string> {
+  const transfers = new Set<string>();
+  const days = new Map<string, LessonRoom[]>();
+  for (const lesson of lessons) {
+    const key = `${lesson.classCode}:${lesson.weekday}`;
+    const day = days.get(key) ?? [];
+    day.push(lesson);
+    days.set(key, day);
+  }
+
+  for (const day of days.values()) {
+    day.sort((a, b) => a.period - b.period);
+    const groups = new Set(day.map((lesson) => lesson.group).filter((group) => group !== null));
+    // A whole-class lesson belongs to every group. With no splits, use one track.
+    for (const group of groups.size ? groups : [null]) {
+      let previous: LessonRoom[] = [];
+      let current: LessonRoom[] = [];
+      for (const lesson of day) {
+        if (lesson.group !== null && lesson.group !== group) continue;
+        if (current.length && lesson.period !== current[0].period) {
+          previous = current;
+          current = [];
+        }
+        if (lesson.room && previous.some((prior) => prior.room && prior.room !== lesson.room)) {
+          transfers.add(lesson.id);
+        }
+        current.push(lesson);
+      }
+    }
+  }
+  return transfers;
+}
 
 export type TimetableView = "class" | "room" | "teacher";
 

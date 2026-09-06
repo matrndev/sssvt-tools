@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faComputer } from "@fortawesome/free-solid-svg-icons"
+import { faComputer, faTriangleExclamation } from "@fortawesome/free-solid-svg-icons"
 import {
   buildTimetableGrid,
   PERIODS,
@@ -49,7 +49,7 @@ export default function Timetable({
                 {day.map((cell, periodIndex) => (
                   <td key={periodIndex} className={"border-r border-t border-slate-500 p-0 align-top last:border-r-0"}>
                       <div
-                        className={`grid auto-rows-fr divide-slate-300 divide-y divide-dashed ${view === "class" ? "[--lesson-height:3rem] sm:[--lesson-height:3.5rem]" : "[--lesson-height:3.5rem] sm:[--lesson-height:4.5rem]"}`}
+                        className="grid auto-rows-fr divide-slate-600 divide-y divide-dashed [--lesson-height:3rem] sm:[--lesson-height:3.5rem]"
                         style={{ height: `calc(${Math.max(2, ...day.map((lessons) => lessons.length))} * var(--lesson-height))` }}
                         aria-label={cell.length === 0 ? "No lesson" : undefined}
                       >
@@ -61,12 +61,14 @@ export default function Timetable({
                               </span>
                             )}
                             {lesson.room && (
-                                <span
-                                    title={`Computer Room ${lesson.room}`}
-                                    className={`absolute inline-flex items-center gap-1 text-[9px] leading-3 top-1 right-1 sm:text-[11px] rounded p-0.5 ${lesson.isComputerRoom ? "bg-teal-600/40" : "bg-gray-600/40"}`}
+                                <Link
+                                    href={"?room=" + lesson.room}
+                                    prefetch={false}
+                                    title={lesson.isComputerRoom ? `Computer Room ${lesson.room}` : `Room ${lesson.room}`}
+                                    className={`hover:underline absolute inline-flex items-center gap-1 text-[9px] leading-3 top-1 right-1 sm:text-[11px] rounded p-0.5 ${lesson.requiresRoomTransfer ? "font-bold border" : ""} ${lesson.room === lesson.homeClassroom ? "bg-purple-600/40 border-purple-600" : lesson.isComputerRoom ? "bg-teal-600/40 border-teal-600" : "bg-gray-600/40 border-gray-600"}`}
                                 >
                                     <span>{lesson.room}</span>
-                                </span>
+                                </Link>
                             )}
                             <strong className="text-sm leading-4 font-semibold sm:text-base sm:leading-5" title={lesson.subjectName ?? undefined}>
                               {lesson.subject === "oběd" ? "" : lesson.subject}
@@ -75,13 +77,23 @@ export default function Timetable({
                               <Link
                                 className="text-[11px] leading-3 hover:underline sm:text-xs sm:leading-4 text-slate-300"
                                 prefetch={false}
-                                href={"/teachers/" + lesson.teacher}
+                                href={"?teacher=" + lesson.teacher}
                                 title={lesson.teacherName ?? undefined}
                               >
                                 {lesson.teacher}
                               </Link>
                             )}
-                            {view !== "class" && <span className="text-[11px] leading-3 text-slate-400 sm:text-xs">{lesson.classCode}</span>}
+                            {view !== "class" && (
+                              <span title={`Class ${lesson.classCode}`} className="absolute bottom-1 left-1 rounded bg-gray-600/40 p-0.5 text-[9px] leading-3 sm:text-[11px]">
+                                {lesson.classCode}
+                              </span>
+                            )}
+                            {/* {lesson.isComputerRoom && (
+                              <span title="Computer room" className="absolute bottom-1 right-1 inline-flex h-4 items-center rounded bg-yellow-600/40 p-0.5 text-[9px] leading-3 sm:text-[11px]">
+                                <FontAwesomeIcon icon={faTriangleExclamation} aria-hidden="true" />
+                                <span className="sr-only">Computer room</span>
+                              </span>
+                            )} */}
                           </div>
                         ))}
                       </div>

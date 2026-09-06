@@ -1,7 +1,7 @@
 ﻿import "server-only";
 
 import { getPool } from "./db";
-import { compareClasses, PERIODS, WEEKDAYS, type TimetableLesson } from "./timetable";
+import { compareClasses, getRoomTransfers, PERIODS, WEEKDAYS, type LessonRoom, type TimetableLesson } from "./timetable";
 import { FILTER_KEYS, type FilterKey, type FilterOptions, type TimetableFilters, type TimetableResult } from "./timetable-filters";
 
 // SQL identifiers come only from this map; URL values are always parameters.
@@ -27,12 +27,14 @@ export async function getTimetable(filters: TimetableFilters): Promise<Timetable
     }).join(" AND ");
   }
 
-  const [lessons, facets] = await Promise.all([
-    getPool().query<TimetableLesson>(`
+  const [lessons, facets, roomHistory] = await Promise.all([
+    getPool().query<Omit<TimetableLesson, "requiresRoomTransfer">>(`
       SELECT t.id::text AS id, t.class AS "classCode", t.weekday, t.period,
+        c.home_classroom AS "homeClassroom",
         t.subject, s.name AS "subjectName", t.teacher, teacher.name AS "teacherName",
         t.room, COALESCE(room.is_computer_room, false) AS "isComputerRoom", t.group_num AS "group"
       FROM public.timetable t
+      LEFT JOIN public.classes c ON c.code = t.class
       LEFT JOIN public.subjects s ON s.abbrev = t.subject
       LEFT JOIN public.teachers teacher ON teacher.abbrev = t.teacher
       LEFT JOIN public.rooms room ON room.id = t.room
@@ -53,6 +55,16 @@ export async function getTimetable(filters: TimetableFilters): Promise<Timetable
       SELECT 'class', c.code, NULL::text, 0
       FROM public.classes c
       WHERE NOT EXISTS (SELECT 1 FROM public.timetable t WHERE t.class = c.code)
+    `, values),
+    // Keep the full day for each matching class, even when filters hide earlier lessons.
+    getPool().query<LessonRoom>(`
+      SELECT history.id::text AS id, history.class AS "classCode", history.weekday,
+        history.period, history.group_num AS "group", history.room
+      FROM public.timetable history
+      WHERE EXISTS (
+        SELECT 1 FROM public.timetable t
+        WHERE t.class = history.class AND t.weekday = history.weekday AND ${where()}
+      )
     `, values),
   ]);
 
@@ -77,5 +89,10 @@ export async function getTimetable(filters: TimetableFilters): Promise<Timetable
     options[key].sort((a, b) => key === "class" ? compareClasses(a.value, b.value) : a.value.localeCompare(b.value, "cs", { numeric: true }));
   }
 
-  return { lessons: lessons.rows, options, hasLessons: facets.rows.some((row) => row.key === "group") };
+  const transfers = getRoomTransfers(roomHistory.rows);
+  return {
+    lessons: lessons.rows.map((lesson) => ({ ...lesson, requiresRoomTransfer: transfers.has(lesson.id) })),
+    options,
+    hasLessons: facets.rows.some((row) => row.key === "group"),
+  };
 }
