@@ -80,6 +80,9 @@ export default function TimetableExplorer({ data, filters }: { data: TimetableRe
     const url = new URL(window.location.href);
     for (const field of key ? [key] : FILTER_KEYS) url.searchParams.delete(field);
     if (key) for (const value of values) url.searchParams.append(key, value);
+    // An intentionally cleared timetable must not immediately reapply defaults.
+    if (FILTER_KEYS.some((field) => url.searchParams.getAll(field).some(Boolean))) url.searchParams.delete("view");
+    else url.searchParams.set("view", "all");
     startTransition(() => router.push(`${url.pathname}${url.search}${url.hash}`, { scroll: false }));
   }
 
