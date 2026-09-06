@@ -1,6 +1,7 @@
 ﻿import "server-only";
 
 import { getPool } from "./db";
+import type { OnboardingClass } from "./onboarding";
 import { compareClasses, getRoomTransfers, PERIODS, WEEKDAYS, type LessonRoom, type TimetableLesson } from "./timetable";
 import { FILTER_KEYS, type FilterKey, type FilterOptions, type TimetableFilters, type TimetableResult } from "./timetable-filters";
 
@@ -17,6 +18,18 @@ const columns: Record<FilterKey, string> = {
 };
 
 type OptionRow = { key: FilterKey; value: string; name: string | null; count: number };
+
+export async function getOnboardingClasses(): Promise<OnboardingClass[]> {
+  const { rows } = await getPool().query<OnboardingClass>(`
+    SELECT c.code AS "classCode",
+      COALESCE(array_agg(DISTINCT t.group_num ORDER BY t.group_num)
+        FILTER (WHERE t.group_num IS NOT NULL), ARRAY[]::integer[]) AS groups
+    FROM (SELECT code FROM public.classes UNION SELECT class FROM public.timetable) c
+    LEFT JOIN public.timetable t ON t.class = c.code
+    GROUP BY c.code
+  `);
+  return rows.sort((a, b) => compareClasses(a.classCode, b.classCode));
+}
 
 export async function getTimetable(filters: TimetableFilters): Promise<TimetableResult> {
   const values = FILTER_KEYS.map((key) => filters[key]);
@@ -71,7 +84,7 @@ export async function getTimetable(filters: TimetableFilters): Promise<Timetable
   const options: FilterOptions = { class: [], subject: [], teacher: [], room: [], group: [], weekday: [], period: [] };
   for (const { key, value, name, count } of facets.rows) {
     if (key === "weekday" || key === "period" || !value) continue;
-    let label = name ? `${value} — ${name}` : value;
+    let label = name ? `${name}` : value;
     if (key === "teacher" && value === "none") label = "No teacher assigned";
     if (key === "room" && value === "none") label = "No room assigned";
     if (key === "group") label = value === "whole" ? "Whole class (no group)" : `Group ${value}`;
