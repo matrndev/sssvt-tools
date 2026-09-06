@@ -28,10 +28,10 @@ export default function Timetable({
   return (
     <div className="mt-4 flex min-w-0 max-w-full flex-col gap-4 sm:mt-8 lg:flex-row lg:items-start">
       <div className="min-w-0 w-full max-w-full flex-1 overflow-x-auto overscroll-x-contain rounded-lg border-slate-500 border text-center" role="region" aria-label={title} tabIndex={0}>
-        <table className="bg-slate-900 w-full min-w-190 table-fixed border-collapse text-center text-sm sm:min-w-232 sm:text-base">
+        <table className="bg-slate-900 w-full min-w-212 table-fixed border-separate border-spacing-0 text-center text-sm sm:min-w-232 sm:text-base">
           <thead className={"bg-slate-700"}>
             <tr>
-                <th scope="col" className="sticky left-0 z-1 w-12 border-slate-500 border-r bg-slate-700 sm:w-16">
+                <th scope="col" className="sticky left-0 z-1 w-12 border-slate-500 border-r bg-slate-700 sm:w-14">
                   <span className="sr-only">Day</span>
                 </th>
                 {PERIODS.map(([start, end], index) => (
@@ -56,26 +56,21 @@ export default function Timetable({
                         {cell.map((lesson) => (
                           <div key={lesson.id} className={`relative flex min-h-0 flex-col items-center justify-center px-1 pt-3 pb-1 text-sm sm:px-2 sm:pt-4 ${lesson.subject === "oběd" || lesson.subject === "" ? "bg-slate-900" : "bg-slate-800"}`}>
                             {lesson.group !== null && (
-                              <span title={`Group ${lesson.group}`} className={`absolute left-1 text-[9px] leading-3 sm:top-1 sm:left-1 sm:text-[10px] rounded p-0.5 ${getGroupColor(lesson.group)}`}>
+                              <span title={`Group ${lesson.group}`} className={`absolute top-1 left-1 text-[9px] leading-3 sm:text-[11px] rounded p-0.5 ${getGroupColor(lesson.group)}`}>
                                 {lesson.group}.
                               </span>
                             )}
                             {lesson.room && (
                                 <span
-                                    title={`Room ${lesson.room}`}
-                                    className="absolute inline-flex items-center gap-1 text-[9px] leading-3 top-1 sm:right-1 sm:text-[10px] rounded p-0.5 bg-gray-600/40"
+                                    title={`Computer Room ${lesson.room}`}
+                                    className={`absolute inline-flex items-center gap-1 text-[9px] leading-3 top-1 right-1 sm:text-[11px] rounded p-0.5 ${lesson.isComputerRoom ? "bg-teal-600/40" : "bg-gray-600/40"}`}
                                 >
-                                    <FontAwesomeIcon
-                                    icon={faComputer}
-                                    className="shrink-0 w-2.5"
-                                    />
                                     <span>{lesson.room}</span>
                                 </span>
                             )}
                             <strong className="text-sm leading-4 font-semibold sm:text-base sm:leading-5" title={lesson.subjectName ?? undefined}>
                               {lesson.subject === "oběd" ? "" : lesson.subject}
                             </strong>
-                            {view !== "class" && <span className="text-[10px] leading-3 text-slate-400 sm:text-xs">{lesson.classCode}</span>}
                             {lesson.teacher && (
                               <Link
                                 className="text-[11px] leading-3 hover:underline sm:text-xs sm:leading-4 text-slate-300"
@@ -86,6 +81,7 @@ export default function Timetable({
                                 {lesson.teacher}
                               </Link>
                             )}
+                            {view !== "class" && <span className="text-[11px] leading-3 text-slate-400 sm:text-xs">{lesson.classCode}</span>}
                           </div>
                         ))}
                       </div>

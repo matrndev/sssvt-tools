@@ -22,6 +22,7 @@ export type TimetableLesson = {
   teacher: string | null;
   teacherName: string | null;
   room: string | null;
+  isComputerRoom: boolean;
   group: number | null;
 };
 

@@ -11,7 +11,7 @@ export default async function TimetablePage({ searchParams }: PageProps<"/timeta
   const data = await getTimetable(filters);
 
   return (
-    <main className="mx-auto w-full max-w-400 px-4 py-8 sm:px-8">
+    <main className="mx-auto w-full max-w-300 px-4 py-8 sm:px-8">
       <h1 className="text-3xl font-semibold tracking-tight">Timetable</h1>
       <p className="mt-2 text-sm text-slate-400">Explore the weekly timetable. Combine filters to find exactly the lessons you need.</p>
       <TimetableExplorer data={data} filters={filters} />

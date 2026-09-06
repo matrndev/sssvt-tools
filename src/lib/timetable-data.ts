@@ -31,10 +31,11 @@ export async function getTimetable(filters: TimetableFilters): Promise<Timetable
     getPool().query<TimetableLesson>(`
       SELECT t.id::text AS id, t.class AS "classCode", t.weekday, t.period,
         t.subject, s.name AS "subjectName", t.teacher, teacher.name AS "teacherName",
-        t.room, t.group_num AS "group"
+        t.room, COALESCE(room.is_computer_room, false) AS "isComputerRoom", t.group_num AS "group"
       FROM public.timetable t
       LEFT JOIN public.subjects s ON s.abbrev = t.subject
       LEFT JOIN public.teachers teacher ON teacher.abbrev = t.teacher
+      LEFT JOIN public.rooms room ON room.id = t.room
       WHERE ${where()}
       ORDER BY t.class, t.weekday, t.period, t.group_num NULLS FIRST, t.id
     `, values),
