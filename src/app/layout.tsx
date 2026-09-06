@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Rubik } from "next/font/google";
+import ProjectInfo from "./components/project-info";
 import "./globals.css";
 
 const rubik = Rubik({
@@ -20,14 +21,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         {children}
-        <a
-          href="https://matrn.dev"
-          target="_blank"
-          rel="noreferrer"
-          className="fixed bottom-4 right-4 rounded-full bg-slate-900 border border-slate-800 px-3 py-1.5 text-xs transition-opacity hover:opacity-80"
-        >
-          matrn.dev
-        </a>
+        <ProjectInfo />
       </body>
       
     </html>
