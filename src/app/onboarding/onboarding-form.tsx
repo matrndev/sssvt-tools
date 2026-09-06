@@ -89,7 +89,7 @@ export default function OnboardingForm({ classes }: { classes: OnboardingClass[]
                             </div>
                         </fieldset>)}
 
-                    {selectedClass && <p className="text-sm text-slate-400">Whole-class lessons are included automatically.</p>}
+                    
                     {classes.length === 0 && <p role="status" className="text-sm text-slate-400">No classes are available yet.</p>}
                     {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
                     <button
@@ -97,7 +97,7 @@ export default function OnboardingForm({ classes }: { classes: OnboardingClass[]
                         disabled={!canSubmit || isSaving}
                         className="min-h-12 w-full cursor-pointer rounded-lg bg-blue-400 px-4 py-3 text-sm font-medium text-slate-950 transition-colors hover:bg-blue-300 active:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-blue-400"
                     >
-                        {isSaving ? "Starting app…" : "Start app"}
+                        {isSaving ? "Just a second..." : "Continue"}
                     </button>
                 </form>
             </section>
