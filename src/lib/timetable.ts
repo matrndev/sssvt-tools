@@ -25,17 +25,6 @@ export type TimetableLesson = {
   group: number | null;
 };
 
-export type TimetableClass = {
-  code: string;
-  classTeacher: string | null;
-  homeClassroom: string | null;
-};
-
-export type TimetableData = {
-  classes: TimetableClass[];
-  lessons: TimetableLesson[];
-};
-
 export type TimetableView = "class" | "room" | "teacher";
 
 export function compareClasses(a: string, b: string): number {

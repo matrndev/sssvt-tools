@@ -19,6 +19,7 @@ type TimetableProps = {
 };
 
 export default function Timetable({
+  title,
   lessons,
   view = "class",
 }: TimetableProps) {
@@ -26,7 +27,7 @@ export default function Timetable({
 
   return (
     <div className="mt-4 flex min-w-0 max-w-full flex-col gap-4 sm:mt-8 lg:flex-row lg:items-start">
-      <div className="min-w-0 w-full max-w-full flex-1 overflow-x-auto overscroll-x-contain rounded-lg border-slate-500 border text-center" role="region" tabIndex={0}>
+      <div className="min-w-0 w-full max-w-full flex-1 overflow-x-auto overscroll-x-contain rounded-lg border-slate-500 border text-center" role="region" aria-label={title} tabIndex={0}>
         <table className="bg-slate-900 w-full min-w-190 table-fixed border-collapse text-center text-sm sm:min-w-232 sm:text-base">
           <thead className={"bg-slate-700"}>
             <tr>
@@ -74,6 +75,7 @@ export default function Timetable({
                             <strong className="text-sm leading-4 font-semibold sm:text-base sm:leading-5" title={lesson.subjectName ?? undefined}>
                               {lesson.subject === "oběd" ? "" : lesson.subject}
                             </strong>
+                            {view !== "class" && <span className="text-[10px] leading-3 text-slate-400 sm:text-xs">{lesson.classCode}</span>}
                             {lesson.teacher && (
                               <Link
                                 className="text-[11px] leading-3 hover:underline sm:text-xs sm:leading-4 text-slate-300"
