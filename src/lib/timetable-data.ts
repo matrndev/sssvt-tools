@@ -84,7 +84,7 @@ export async function getTimetable(filters: TimetableFilters): Promise<Timetable
   const options: FilterOptions = { class: [], subject: [], teacher: [], room: [], group: [], weekday: [], period: [] };
   for (const { key, value, name, count } of facets.rows) {
     if (key === "weekday" || key === "period" || !value) continue;
-    let label = name ? `${value} — ${name}` : value;
+    let label = name ? `${name}` : value;
     if (key === "teacher" && value === "none") label = "No teacher assigned";
     if (key === "room" && value === "none") label = "No room assigned";
     if (key === "group") label = value === "whole" ? "Whole class (no group)" : `Group ${value}`;

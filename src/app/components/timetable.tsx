@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faComputer, faTriangleExclamation } from "@fortawesome/free-solid-svg-icons"
+import { faComputer, faTriangleExclamation, faUtensils } from "@fortawesome/free-solid-svg-icons"
 import {
   buildTimetableGrid,
   PERIODS,
@@ -71,7 +71,11 @@ export default function Timetable({
                                 </Link>
                             )}
                             <strong className="text-sm leading-4 font-semibold sm:text-base sm:leading-5" title={lesson.subjectName ?? undefined}>
-                              {lesson.subject === "oběd" ? "" : lesson.subject}
+                              {lesson.subject === "oběd" ? (
+                                <FontAwesomeIcon icon={faUtensils} className="text-lg sm:text-xl" />
+                              ) : (
+                                <span className="text-base sm:text-lg">{lesson.subject}</span>
+                              )}
                             </strong>
                             {lesson.teacher && (
                               <Link

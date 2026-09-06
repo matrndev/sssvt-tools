@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useSyncExternalStore, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useSyncExternalStore, type ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FILTER_KEYS } from "@/lib/timetable-filters";
-import { defaultTimetableUrl, ONBOARDING_STORAGE_KEY, parseOnboardingPreferences } from "@/lib/onboarding";
+import { defaultTimetableUrl, ONBOARDING_STORAGE_KEY, parseOnboardingPreferences, type OnboardingPreferences } from "@/lib/onboarding";
 import Loading from "./loading";
 
 function subscribe(onChange: () => void) {
@@ -21,6 +21,14 @@ function getSnapshot() {
 
 const getServerSnapshot = () => undefined;
 
+const PreferencesContext = createContext<OnboardingPreferences | null>(null);
+
+export function useTimetablePreferences() {
+  const preferences = useContext(PreferencesContext);
+  if (!preferences) throw new Error("Timetable preferences require PreferencesGate.");
+  return preferences;
+}
+
 export default function PreferencesGate({ children }: { children: ReactNode }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -34,6 +42,6 @@ export default function PreferencesGate({ children }: { children: ReactNode }) {
     if (destination) router.replace(`${destination}${window.location.hash}`, { scroll: false });
   }, [destination, router]);
 
-  if (raw === undefined || destination) return <Loading />;
-  return children;
+  if (raw === undefined || destination || !preferences) return <Loading />;
+  return <PreferencesContext value={preferences}>{children}</PreferencesContext>;
 }
