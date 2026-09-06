@@ -65,3 +65,21 @@ export function buildTimetableGrid(lessons: TimetableLesson[]) {
   }
   return grid;
 }
+
+export function getGroupColor(group: number | null): string {
+  if (group === null) {
+    return "bg-gray-600/40";
+  }
+  switch (group) {
+    case 1:
+      return "bg-blue-600/40";
+    case 2:
+      return "bg-green-600/40";
+    case 3:
+      return "bg-yellow-600/40";
+    case 4:
+      return "bg-orange-600/40";
+    default:
+      return "bg-gray-600/40";
+  }
+}
