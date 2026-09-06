@@ -7,7 +7,6 @@ import {
   type TimetableLesson,
   type TimetableView,
 } from "@/lib/timetable";
-import styles from "./timetable.module.css";
 
 type TimetableProps = {
   title: string;
@@ -21,68 +20,70 @@ export default function Timetable({
   title,
   lessons,
   view = "class",
-  classTeacher,
-  homeClassroom,
 }: TimetableProps) {
   const grid = buildTimetableGrid(lessons);
 
   return (
-    <section className={styles.section}>
-      <h2 className={styles.title}>{title}</h2>
-      {(classTeacher || homeClassroom) && (
-        <p className={styles.metadata}>
-          {classTeacher && <span>Třídní učitel: {classTeacher}</span>}
-          {homeClassroom && <span>Kmenová učebna: {homeClassroom}</span>}
-        </p>
-      )}
-      {lessons.length === 0 && <p className={styles.metadata}>Pro tento rozvrh zatím nejsou dostupné hodiny.</p>}
-      <div className={styles.scroll} role="region" aria-label={title} tabIndex={0}>
-        <table className={styles.table}>
-          <caption className={styles.srOnly}>{title} — pondělí až pátek</caption>
-          <thead>
+    <div className="mt-4 flex min-w-0 max-w-full flex-col gap-4 sm:mt-8 lg:flex-row lg:items-start">
+      <div className="min-w-0 w-full max-w-full flex-1 overflow-x-auto overscroll-x-contain rounded-md border text-center" role="region" aria-label={title} tabIndex={0}>
+        <table className="w-full min-w-190 table-fixed border-collapse text-center text-sm sm:min-w-232 sm:text-base">
+          <thead className={"bg-gray-800"}>
             <tr>
-              <th scope="col" className={styles.day}><span className={styles.srOnly}>Den</span></th>
-              {PERIODS.map(([start, end], index) => (
-                <th scope="col" key={start}>
-                  <span className={styles.period}>{index + 1}</span>
-                  <span className={styles.time}><time>{start}</time> – <time>{end}</time></span>
-                </th>
-              ))}
+                <th scope="col" className="sticky left-0 z-1 w-12 border-r bg-gray-800 sm:w-16"><span className="sr-only">Day</span></th>
+                {PERIODS.map(([start, end], index) => (
+                    <th scope="col" key={start} className="border-r px-1 py-1 text-center last:border-r-0 sm:px-2 sm:py-2">
+                        <span className={"block"}>{index + 1}.</span>
+                        <span className="block whitespace-nowrap text-[10px] font-light tabular-nums sm:text-xs"><time>{start}</time> – <time>{end}</time></span>
+                    </th>
+                ))}
             </tr>
           </thead>
           <tbody>
             {grid.map((day, dayIndex) => (
               <tr key={WEEKDAYS[dayIndex]}>
-                <th scope="row" className={styles.day}>{WEEKDAYS[dayIndex]}</th>
+                <th scope="row" className="sticky left-0 z-1 border-r border-t bg-gray-800 text-xs sm:text-sm">{WEEKDAYS[dayIndex]}</th>
                 {day.map((cell, periodIndex) => (
-                  <td key={periodIndex}>
-                    {cell.length === 0 ? (
-                      <span className={styles.empty} aria-label="Volná hodina">—</span>
-                    ) : (
-                      <div className={styles.lessons}>
+                  <td key={periodIndex} className={"border-r border-t p-0 align-top last:border-r-0"}>
+                      <div
+                        className={`grid auto-rows-fr divide-y divide-dashed ${view === "class" ? "[--lesson-height:3rem] sm:[--lesson-height:3.5rem]" : "[--lesson-height:3.5rem] sm:[--lesson-height:4.5rem]"}`}
+                        style={{ height: `calc(${Math.max(2, ...day.map((lessons) => lessons.length))} * var(--lesson-height))` }}
+                        aria-label={cell.length === 0 ? "No lesson" : undefined}
+                      >
                         {cell.map((lesson) => (
-                          <div key={lesson.id} className={`${styles.lesson} ${lesson.subject === "oběd" ? styles.lunch : ""}`}>
-                            <div>
-                              <strong title={lesson.subjectName ?? undefined}>{lesson.subject}</strong>
-                              {lesson.group !== null && <span className={styles.group}> ({lesson.group}.sk)</span>}
-                            </div>
-                            {view !== "class" && (
-                              <Link prefetch={false} href={timetableHref("class", lesson.classCode)}>{lesson.classCode}</Link>
+                          <div key={lesson.id} className="relative flex min-h-0 flex-col items-center justify-center px-1 pt-3 pb-1 text-sm sm:px-2 sm:pt-4">
+                            {lesson.group !== null && (
+                              <span className="absolute top-0.5 left-1 text-[9px] leading-3 sm:top-1 sm:left-2 sm:text-[10px]">{lesson.group}.</span>
                             )}
-                            {(lesson.teacher || lesson.room) && (
-                              <div className={styles.details}>
-                                {lesson.teacher && (
-                                  <Link prefetch={false} href={timetableHref("teacher", lesson.teacher)} title={lesson.teacherName ?? undefined}>
-                                    {lesson.teacher}
-                                  </Link>
-                                )}
-                                {lesson.room && <span> (<Link prefetch={false} href={timetableHref("room", lesson.room)}>{lesson.room}</Link>)</span>}
-                              </div>
+                            {lesson.room && (
+                              <Link
+                                className="absolute top-0.5 right-1 text-[9px] leading-3 hover:underline sm:top-1 sm:right-2 sm:text-[10px]"
+                                prefetch={false}
+                                href={timetableHref("room", lesson.room)}
+                              >
+                                {lesson.room}
+                              </Link>
+                            )}
+                            <strong className="text-sm leading-4 font-semibold sm:text-base sm:leading-5" title={lesson.subjectName ?? undefined}>
+                              {lesson.subject === "oběd" ? "" : lesson.subject}
+                            </strong>
+                            {lesson.teacher && (
+                              <Link
+                                className="text-[11px] leading-3 hover:underline sm:text-xs sm:leading-4"
+                                prefetch={false}
+                                href={timetableHref("teacher", lesson.teacher)}
+                                title={lesson.teacherName ?? undefined}
+                              >
+                                {lesson.teacher}
+                              </Link>
+                            )}
+                            {view !== "class" && (
+                              <Link className="text-[10px] leading-3 hover:underline sm:leading-4" prefetch={false} href={timetableHref("class", lesson.classCode)}>
+                                {lesson.classCode}
+                              </Link>
                             )}
                           </div>
                         ))}
                       </div>
-                    )}
                   </td>
                 ))}
               </tr>
@@ -90,6 +91,6 @@ export default function Timetable({
           </tbody>
         </table>
       </div>
-    </section>
+    </div>
   );
 }

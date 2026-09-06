@@ -1,6 +1,5 @@
-export const WEEKDAYS = ["Po", "Út", "St", "Čt", "Pá"] as const;
+export const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"] as const;
 
-// Bell times from https://www.sssvt.cz/IS/rozvrh-hodin/.
 export const PERIODS = [
   ["08:00", "08:45"],
   ["08:55", "09:40"],
