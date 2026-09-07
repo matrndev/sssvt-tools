@@ -48,10 +48,24 @@ export async function getTimetable(filters: TimetableFilters, mode: TimetableFil
 
   const [lessons, facets, roomHistory] = await Promise.all([
     getPool().query<Omit<TimetableLesson, "requiresRoomTransfer">>(`
+      WITH lunch_classes AS (
+        SELECT class, weekday, period,
+          CASE WHEN bool_or(group_num IS NULL) THEN ARRAY[]::integer[]
+            ELSE array_agg(DISTINCT group_num ORDER BY group_num) END AS groups
+        FROM public.timetable
+        WHERE subject = 'oběd'
+        GROUP BY class, weekday, period
+      )
       SELECT t.id::text AS id, t.class AS "classCode", t.weekday, t.period,
         c.home_classroom AS "homeClassroom",
         t.subject, s.name AS "subjectName", t.teacher, teacher.name AS "teacherName",
-        t.room, COALESCE(room.is_computer_room, false) AS "isComputerRoom", t.group_num AS "group"
+        t.room, COALESCE(room.is_computer_room, false) AS "isComputerRoom", t.group_num AS "group",
+        COALESCE((
+          SELECT jsonb_agg(jsonb_build_object('classCode', lunch.class, 'groups', lunch.groups))
+          FROM lunch_classes lunch
+          WHERE t.subject = 'oběd' AND lunch.weekday = t.weekday AND lunch.period = t.period
+            AND lunch.class <> t.class
+        ), '[]'::jsonb) AS "otherLunchClasses"
       FROM public.timetable t
       LEFT JOIN public.classes c ON c.code = t.class
       LEFT JOIN public.subjects s ON s.abbrev = t.subject
@@ -110,7 +124,11 @@ export async function getTimetable(filters: TimetableFilters, mode: TimetableFil
 
   const transfers = getRoomTransfers(roomHistory.rows);
   return {
-    lessons: lessons.rows.map((lesson) => ({ ...lesson, requiresRoomTransfer: transfers.has(lesson.id) })),
+    lessons: lessons.rows.map((lesson) => ({
+      ...lesson,
+      requiresRoomTransfer: transfers.has(lesson.id),
+      otherLunchClasses: lesson.otherLunchClasses.sort((a, b) => compareClasses(a.classCode, b.classCode)),
+    })),
     options,
     hasLessons: facets.rows.some((row) => row.key === "group"),
   };
