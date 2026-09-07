@@ -36,7 +36,8 @@ export default function PreferencesGate({ children }: { children: ReactNode }) {
   const preferences = parseOnboardingPreferences(raw);
   const hasFilters = FILTER_KEYS.some((key) => searchParams.getAll(key).some(Boolean));
   const destination = raw === undefined ? null : !preferences ? "/onboarding"
-    : !hasFilters && searchParams.get("view") !== "all" ? defaultTimetableUrl(preferences, searchParams.toString()) : null;
+    : !hasFilters && searchParams.get("view") !== "all" && searchParams.get("mode") !== "advanced"
+      ? defaultTimetableUrl(preferences, searchParams.toString()) : null;
 
   useEffect(() => {
     if (destination) router.replace(`${destination}${window.location.hash}`, { scroll: false });
