@@ -12,6 +12,19 @@ export const PERIODS = [
   ["15:30", "16:15"],
 ] as const;
 
+export type LunchClass = {
+  classCode: string;
+  groups: number[];
+};
+
+export function getLunchDescription(classes: LunchClass[]): string {
+  if (classes.length === 0) return "No other classes having lunch with you";
+  const names = classes.map(({ classCode, groups }) => groups.length
+    ? `${classCode} (${groups.length === 1 ? "group" : "groups"} ${groups.join(", ")})`
+    : classCode);
+  return `${classes.length} other ${classes.length === 1 ? "class" : "classes"} having lunch with you: ${names.join(", ")}`;
+}
+
 export type TimetableLesson = {
   id: string;
   classCode: string;
@@ -26,6 +39,7 @@ export type TimetableLesson = {
   isComputerRoom: boolean;
   requiresRoomTransfer: boolean;
   group: number | null;
+  otherLunchClasses: LunchClass[];
 };
 
 export type LessonRoom = Pick<TimetableLesson, "id" | "classCode" | "weekday" | "period" | "group" | "room">;

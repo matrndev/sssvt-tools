@@ -7,6 +7,7 @@ import {
   PERIODS,
   WEEKDAYS,
   getGroupColor,
+  getLunchDescription,
   type TimetableLesson,
   type TimetableView,
 } from "@/lib/timetable";
@@ -62,7 +63,7 @@ export default function Timetable({
                         aria-label={cell.length === 0 ? "No lesson" : undefined}
                       >
                         {cell.map((lesson) => (
-                          <div key={lesson.id} className={`relative flex min-h-0 flex-col items-center justify-center px-1 pt-3 pb-1 text-sm sm:px-2 sm:pt-4 ${lesson.subject === "oběd" || lesson.subject === "" ? "bg-slate-900" : "bg-slate-800"}`}>
+                          <div key={lesson.id} className={`relative flex min-h-0 flex-col items-center justify-center px-1 pt-3 pb-1 text-sm sm:px-2 ${lesson.subject === "oběd" ? "sm:pt-3" : "sm:pt-1"} ${lesson.subject === "oběd" || lesson.subject === "" ? "bg-slate-900" : "bg-slate-800"}`}>
                             {lesson.group !== null && (
                               <span title={`Group ${lesson.group}`} className={`absolute top-1 left-1 text-[9px] leading-3 sm:text-[11px] rounded p-0.5 ${getGroupColor(lesson.group)}`}>
                                 {lesson.group}.
@@ -78,13 +79,16 @@ export default function Timetable({
                                     <span>{lesson.room}</span>
                                 </Link>
                             )}
-                            <strong className="text-sm leading-4 font-semibold sm:text-base sm:leading-5" title={lesson.subjectName ?? undefined}>
+                            <p className="leading-4 sm:leading-5">
                               {lesson.subject === "oběd" ? (
-                                <FontAwesomeIcon icon={faUtensils} className="text-lg sm:text-xl" />
+                                <>
+                                  <FontAwesomeIcon icon={faUtensils} className="text-lg sm:text-xl" /><br/>
+                                  <span title={getLunchDescription(lesson.otherLunchClasses)} aria-label={getLunchDescription(lesson.otherLunchClasses)} className="text-[11px] leading-3 sm:text-xs text-slate-300">+{lesson.otherLunchClasses.length}</span>
+                                </>
                               ) : (
-                                <span className="text-base sm:text-lg">{lesson.subject}</span>
+                                <span className="font-semibold text-base sm:text-lg">{lesson.subject}</span>
                               )}
-                            </strong>
+                            </p>
                             {lesson.teacher && (
                               <Link
                                 className="text-[11px] leading-3 hover:underline sm:text-xs sm:leading-4 text-slate-300"
