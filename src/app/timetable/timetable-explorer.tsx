@@ -59,7 +59,6 @@ function FilterDropdown({ filterKey, options, selected, onChange, easy = false, 
           : `items-center rounded-lg border px-3 py-2.5 text-sm hover:border-slate-600 hover:bg-slate-800/60 group-open:border-slate-500 group-open:bg-slate-800/70 ${selected.length > 0 ? "border-slate-600 bg-slate-800/60 text-slate-100" : "border-slate-700/60 bg-slate-900/40 text-slate-400"}`}`}>
         {easy ? (
           <>
-            <span className={`text-xs text-slate-400 ${compact ? "shrink-0" : "order-2"}`}>Filter by {filterKey}</span>
             <span className={`flex min-w-0 items-center gap-2 ${compact ? "text-sm" : "w-full text-2xl font-medium tracking-tight sm:text-3xl"} ${selected.length > 0 ? "text-blue-200" : "text-slate-400"}`}>
               <span className="min-w-0 truncate" title={selectionLabel}>{selectionLabel}</span>
               <Chevron />
@@ -78,7 +77,6 @@ function FilterDropdown({ filterKey, options, selected, onChange, easy = false, 
           value={query} onChange={(event) => setQuery(event.target.value)} className="w-full rounded-md border border-slate-600 bg-slate-800 p-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-blue-400" />
         <button type="button" className={`${clearButtonClasses} my-3 min-h-8`} disabled={selected.length === 0}
           onClick={() => { onChange([]); if (single) closeDropdown(); }}>{compact ? "Show all groups" : `Clear ${label.toLowerCase()}`}</button>
-        {compact && <p className="mb-2 text-xs text-slate-400">Whole-class lessons are always included.</p>}
         <fieldset className="mt-2 max-h-64 overflow-y-auto overscroll-contain">
           <legend className="sr-only">{label}: {single ? "choose one" : "select any matching values"}</legend>
           {visibleOptions.map((option) => (
@@ -99,7 +97,7 @@ function FilterDropdown({ filterKey, options, selected, onChange, easy = false, 
   );
 }
 
-function Chevron() {
+function Chevron() { // TODO: ???? what is this lol
   return <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" className="size-3.5 shrink-0 text-slate-500 transition-transform group-open:rotate-180"><path d="m4 6 4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>;
 }
 
@@ -170,7 +168,7 @@ export default function TimetableExplorer({ data, filters, mode }: { data: Timet
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-3 sm:gap-6">
               <div className="min-w-0">
                 {dropdown("class")}
-                <div className="mt-1 border-l-2 border-slate-700/60 pl-3">{dropdown("group")}</div>
+                <div className="">{dropdown("group")}</div>
               </div>
               <div className="min-w-0 border-t border-slate-800 pt-4 sm:border-t-0 sm:border-l sm:pt-0 sm:pl-6">{dropdown("room")}</div>
               <div className="min-w-0 border-t border-slate-800 pt-4 sm:border-t-0 sm:border-l sm:pt-0 sm:pl-6">{dropdown("teacher")}</div>
