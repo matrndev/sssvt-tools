@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { TimetableFilterMode } from "@/lib/timetable-filters";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faComputer, faTriangleExclamation, faUtensils } from "@fortawesome/free-solid-svg-icons"
 import {
@@ -14,6 +15,7 @@ type TimetableProps = {
   title: string;
   lessons: TimetableLesson[];
   view?: TimetableView;
+  filterMode?: TimetableFilterMode;
   classTeacher?: string | null;
   homeClassroom?: string | null;
 };
@@ -22,8 +24,14 @@ export default function Timetable({
   title,
   lessons,
   view = "class",
+  filterMode = "easy",
 }: TimetableProps) {
   const grid = buildTimetableGrid(lessons);
+  const filterHref = (key: "teacher" | "room", value: string) => {
+    const params = new URLSearchParams({ [key]: value });
+    if (filterMode === "advanced") params.set("mode", "advanced");
+    return `?${params}`;
+  };
 
   return (
     <div className="mt-4 flex min-w-0 max-w-full flex-col gap-4 sm:mt-8 lg:flex-row lg:items-start">
@@ -62,7 +70,7 @@ export default function Timetable({
                             )}
                             {lesson.room && (
                                 <Link
-                                    href={"?room=" + lesson.room}
+                                    href={filterHref("room", lesson.room)}
                                     prefetch={false}
                                     title={lesson.isComputerRoom ? `Computer Room ${lesson.room}` : `Room ${lesson.room}`}
                                     className={`hover:underline absolute inline-flex items-center gap-1 text-[9px] leading-3 top-1 right-1 sm:text-[11px] rounded p-0.5 ${lesson.requiresRoomTransfer ? "font-bold border" : ""} ${lesson.room === lesson.homeClassroom ? "bg-purple-600/40 border-purple-600" : lesson.isComputerRoom ? "bg-teal-600/40 border-teal-600" : "bg-gray-600/40 border-gray-600"}`}
@@ -81,7 +89,7 @@ export default function Timetable({
                               <Link
                                 className="text-[11px] leading-3 hover:underline sm:text-xs sm:leading-4 text-slate-300"
                                 prefetch={false}
-                                href={"?teacher=" + lesson.teacher}
+                                href={filterHref("teacher", lesson.teacher)}
                                 title={lesson.teacherName ?? undefined}
                               >
                                 {lesson.teacher}

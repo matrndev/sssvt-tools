@@ -13,6 +13,7 @@ export const FILTER_LABELS = {
 export type FilterKey = keyof typeof FILTER_LABELS;
 export const FILTER_KEYS = Object.keys(FILTER_LABELS) as FilterKey[];
 export type TimetableFilters = Record<FilterKey, string[]>;
+export type TimetableFilterMode = "easy" | "advanced";
 export type FilterOption = { value: string; label: string; count: number };
 export type FilterOptions = Record<FilterKey, FilterOption[]>;
 export type TimetableResult = {
@@ -29,4 +30,26 @@ export function readTimetableFilters(params: Record<string, string | string[] | 
     const values = Array.isArray(value) ? value : value === undefined ? [] : [value];
     return [key, [...new Set(values.filter((item) => item !== ""))]];
   })) as TimetableFilters;
+}
+
+export function readTimetableFilterMode(mode: string | string[] | undefined, filters: TimetableFilters): TimetableFilterMode {
+  // Preserve older shared URLs with combinations that easy mode cannot express.
+  const primaryCount = [filters.class, filters.teacher, filters.room].filter((values) => values.length > 0).length;
+  const needsAdvanced = primaryCount > 1 || [filters.class, filters.teacher, filters.room].some((values) => values.length > 1)
+    || [filters.subject, filters.weekday, filters.period].some((values) => values.length > 0)
+    || (filters.group.length > 0 && (filters.class.length !== 1 || !filters.group.includes("whole")));
+  return mode === "advanced" || needsAdvanced ? "advanced" : "easy";
+}
+
+export function updateEasyTimetableFilters(filters: TimetableFilters, key: FilterKey, values: string[]): TimetableFilters {
+  const next = readTimetableFilters({});
+  if (key === "group") {
+    if (filters.class.length !== 1) return filters;
+    next.class = filters.class;
+    next.group = values.length > 0 ? [...new Set([...values, "whole"])] : [];
+  } else if (key === "class" || key === "teacher" || key === "room") {
+    next[key] = values.slice(0, 1);
+    if (key === "class" && next.class[0] === filters.class[0]) next.group = filters.group;
+  }
+  return next;
 }
