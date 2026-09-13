@@ -3,7 +3,7 @@
 import { getPool } from "./db";
 import type { OnboardingClass } from "./onboarding";
 import { compareClasses, getRoomTransfers, PERIODS, WEEKDAYS, type LessonRoom, type TimetableLesson } from "./timetable";
-import { FILTER_KEYS, type FilterKey, type FilterOptions, type TimetableFilters, type TimetableFilterMode, type TimetableResult } from "./timetable-filters";
+import { FILTER_KEYS, isTrailingFilterOption, type FilterKey, type FilterOptions, type TimetableFilters, type TimetableFilterMode, type TimetableResult } from "./timetable-filters";
 
 // SQL identifiers come only from this map; URL values are always parameters.
 // Text comparisons also make invalid numeric URL values harmless non-matches.
@@ -107,19 +107,23 @@ export async function getTimetable(filters: TimetableFilters, mode: TimetableFil
     let label = name ? `${name}` : value;
     if (key === "teacher" && value === "none") label = "No teacher assigned";
     if (key === "room" && value === "none") label = "No room assigned";
-    if (key === "group") label = value === "whole" ? "Whole class (no group)" : `Group ${value}`;
+    if (key === "group") label = value === "whole" ? "Whole class" : `Group ${value}`;
     options[key].push({ value, label, count });
   }
   // Keep all school days and periods available, including those with no lessons.
   options.weekday = WEEKDAYS.map((label, index) => ({ value: String(index + 1), label, count: 0 }));
-  options.period = PERIODS.map(([start, end], index) => ({ value: String(index + 1), label: `${index + 1}. ${start}–${end}`, count: 0 }));
+  options.period = PERIODS.map(([start, end], index) => ({ value: String(index + 1), label: `${index + 1}. (${start} – ${end})`, count: 0 }));
   for (const row of facets.rows) {
     if (row.key !== "weekday" && row.key !== "period") continue;
     const option = options[row.key].find((item) => item.value === row.value);
     if (option) option.count = row.count;
   }
   for (const key of FILTER_KEYS) {
-    options[key].sort((a, b) => key === "class" ? compareClasses(a.value, b.value) : a.value.localeCompare(b.value, "cs", { numeric: true }));
+    options[key].sort((a, b) => {
+      const trailingDifference = Number(isTrailingFilterOption(key, a.value)) - Number(isTrailingFilterOption(key, b.value));
+      if (trailingDifference !== 0) return trailingDifference;
+      return key === "class" ? compareClasses(a.value, b.value) : a.value.localeCompare(b.value, "cs", { numeric: true });
+    });
   }
 
   const transfers = getRoomTransfers(roomHistory.rows);

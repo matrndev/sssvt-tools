@@ -22,6 +22,10 @@ export type TimetableResult = {
   hasLessons: boolean;
 };
 
+export function isTrailingFilterOption(key: FilterKey, value: string): boolean {
+  return (key === "teacher" || key === "room") ? value === "none" : key === "subject" && value === "oběd";
+}
+
 export function readTimetableFilters(params: Record<string, string | string[] | undefined>): TimetableFilters {
   // Only accept known fields and nonempty, unique values. Unknown option values
   // remain visible and match nothing in SQL, rather than broadening a stale URL.

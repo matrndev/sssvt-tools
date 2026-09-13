@@ -8,7 +8,7 @@ import Timetable from "@/app/components/timetable";
 import { defaultTimetableFilters } from "@/lib/onboarding";
 import { useTimetablePreferences } from "./preferences-gate";
 import {
-  FILTER_KEYS, FILTER_LABELS, readTimetableFilters, updateEasyTimetableFilters,
+  FILTER_KEYS, FILTER_LABELS, isTrailingFilterOption, readTimetableFilters, updateEasyTimetableFilters,
   type FilterKey, type FilterOption, type TimetableFilterMode, type TimetableFilters, type TimetableResult,
 } from "@/lib/timetable-filters";
 
@@ -28,7 +28,8 @@ function FilterDropdown({ filterKey, options, selected, onChange, easy = false, 
   const single = easy && filterKey !== "group";
   const compact = easy && filterKey === "group";
   const allOptions = [...options, ...selected.filter((value) => !options.some((option) => option.value === value))
-    .map((value) => ({ value, label: `${value} (unavailable)`, count: 0 }))];
+    .map((value) => ({ value, label: `${value} (unavailable)`, count: 0 }))]
+    .sort((a, b) => Number(isTrailingFilterOption(filterKey, a.value)) - Number(isTrailingFilterOption(filterKey, b.value)));
   const visibleOptions = allOptions.filter((option) =>
     (option.count > 0 || selected.includes(option.value)) && !(compact && option.value === "whole")
     && `${option.label} ${option.value}`.toLocaleLowerCase("cs").includes(query.toLocaleLowerCase("cs")));
