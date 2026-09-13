@@ -89,6 +89,7 @@ function FilterDropdown({ filterKey, options, selected, onChange, easy = false, 
 export default function TimetableExplorer({ data, filters, mode }: { data: TimetableResult; filters: TimetableFilters; mode: TimetableFilterMode }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [highlightSubjects, setHighlightSubjects] = useState(true);
   const preferences = useTimetablePreferences();
   const defaults = defaultTimetableFilters(preferences);
   const { lessons, options, hasLessons } = data;
@@ -166,7 +167,17 @@ export default function TimetableExplorer({ data, filters, mode }: { data: Timet
         </div>
       </fieldset>
       <p role="status" className="sr-only">{isPending ? "Updating timetable…" : ""}</p>
-      {lessons.length > 0 ? <Timetable title="Weekly timetable" lessons={lessons} view={filters.class.length === 1 ? "class" : "teacher"} filterMode={mode} /> : (
+      <div className="mt-4 flex justify-end">
+        <button type="button" role="switch" aria-checked={highlightSubjects}
+          onClick={() => setHighlightSubjects((enabled) => !enabled)}
+          className="group/highlight inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-2 text-left text-xs text-slate-300 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-blue-400 sm:text-sm">
+          <span>Highlight same subject on hover</span>
+          <span aria-hidden="true" className={`flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors ${highlightSubjects ? "bg-blue-400/60 group-hover/highlight:bg-blue-400/70" : "bg-slate-700 group-hover/highlight:bg-slate-600"}`}>
+            <span className={`size-4 rounded-full bg-slate-200 transition-transform motion-reduce:transition-none ${highlightSubjects ? "translate-x-4" : "translate-x-0"}`} />
+          </span>
+        </button>
+      </div>
+      {lessons.length > 0 ? <Timetable title="Weekly timetable" lessons={lessons} view={filters.class.length === 1 ? "class" : "teacher"} filterMode={mode} highlightSubjects={highlightSubjects} /> : (
         <div className="mt-4 rounded-xl border border-dashed border-slate-700 px-6 py-12 text-center">
           <h2 className="text-lg font-medium">{!hasLessons ? "No timetable data available" : "No lessons match these filters"}</h2>
           <p className="mt-2 text-sm text-slate-400">{!hasLessons ? "The timetable will appear when lessons are available." : "Remove a filter or choose another combination."}</p>

@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import type { TimetableFilterMode } from "@/lib/timetable-filters";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
@@ -17,6 +20,7 @@ type TimetableProps = {
   lessons: TimetableLesson[];
   view?: TimetableView;
   filterMode?: TimetableFilterMode;
+  highlightSubjects?: boolean;
   classTeacher?: string | null;
   homeClassroom?: string | null;
 };
@@ -26,7 +30,9 @@ export default function Timetable({
   lessons,
   view = "class",
   filterMode = "easy",
+  highlightSubjects = true,
 }: TimetableProps) {
+  const [hoveredSubject, setHoveredSubject] = useState<string | null>(null);
   const grid = buildTimetableGrid(lessons);
   const filterHref = (key: "teacher" | "room" | "class", value: string) => {
     const params = new URLSearchParams({ [key]: value });
@@ -63,7 +69,19 @@ export default function Timetable({
                         aria-label={cell.length === 0 ? "No lesson" : undefined}
                       >
                         {cell.map((lesson) => (
-                          <div key={lesson.id} className={`relative flex min-h-0 flex-col items-center justify-center px-1 pt-3 pb-1 text-sm sm:px-2 ${lesson.subject === "oběd" ? "sm:pt-3" : "sm:pt-1"} ${lesson.subject === "oběd" || lesson.subject === "" ? "bg-slate-900" : "bg-slate-800"}`}>
+                          <div key={lesson.id}
+                            onPointerEnter={(event) => {
+                              if (event.pointerType !== "touch") {
+                                setHoveredSubject(highlightSubjects && lesson.subject.trim() && lesson.subject !== "oběd" ? lesson.subject : null);
+                              }
+                            }}
+                            onPointerLeave={() => setHoveredSubject(null)}
+                            onPointerCancel={() => setHoveredSubject(null)}
+                            className={`relative flex min-h-0 flex-col items-center justify-center px-1 pt-3 pb-1 text-sm sm:px-2 ${lesson.subject === "oběd" ? "sm:pt-3" : "sm:pt-1"} ${lesson.subject === "oběd" || lesson.subject === "" ? "bg-slate-900" : "bg-slate-800"}`}>
+                            <span
+                              aria-hidden="true"
+                              className={`pointer-events-none absolute inset-0 z-10 ${highlightSubjects && hoveredSubject === lesson.subject ? "border-2 border-blue-400" : ""}`}
+                            />
                             {lesson.group !== null && (
                               <span title={`Group ${lesson.group}`} className={`absolute top-1 left-1 text-[9px] leading-3 sm:text-[11px] rounded p-0.5 ${getGroupColor(lesson.group)}`}>
                                 {lesson.group}.
