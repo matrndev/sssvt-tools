@@ -1,6 +1,7 @@
 ﻿import "server-only";
 
 import { getPool } from "./db";
+import { effectiveTimetableSql } from "./timetable-substitutions";
 import type { OnboardingClass } from "./onboarding";
 import { compareClasses, getRoomTransfers, PERIODS, WEEKDAYS, type LessonRoom, type TimetableLesson } from "./timetable";
 import { FILTER_KEYS, isTrailingFilterOption, type FilterKey, type FilterOptions, type TimetableFilters, type TimetableFilterMode, type TimetableResult } from "./timetable-filters";
@@ -31,7 +32,8 @@ export async function getOnboardingClasses(): Promise<OnboardingClass[]> {
   return rows.sort((a, b) => compareClasses(a.classCode, b.classCode));
 }
 
-export async function getTimetable(filters: TimetableFilters, mode: TimetableFilterMode = "advanced"): Promise<TimetableResult> {
+export async function getTimetable(filters: TimetableFilters, mode: TimetableFilterMode = "advanced", showSubstitutions = false): Promise<TimetableResult> {
+  const effectiveTimetable = effectiveTimetableSql(showSubstitutions);
   const values = FILTER_KEYS.map((key) => filters[key]);
   function where(except?: FilterKey) {
     return FILTER_KEYS.filter((key) => key !== except).map((key) => {
@@ -48,11 +50,11 @@ export async function getTimetable(filters: TimetableFilters, mode: TimetableFil
 
   const [lessons, facets, roomHistory] = await Promise.all([
     getPool().query<Omit<TimetableLesson, "requiresRoomTransfer">>(`
-      WITH lunch_classes AS (
+      WITH ${effectiveTimetable}, lunch_classes AS (
         SELECT class, weekday, period,
           CASE WHEN bool_or(group_num IS NULL) THEN ARRAY[]::integer[]
             ELSE array_agg(DISTINCT group_num ORDER BY group_num) END AS groups
-        FROM public.timetable
+        FROM effective_timetable
         WHERE subject = 'oběd'
         GROUP BY class, weekday, period
       )
@@ -60,13 +62,14 @@ export async function getTimetable(filters: TimetableFilters, mode: TimetableFil
         c.home_classroom AS "homeClassroom",
         t.subject, s.name AS "subjectName", t.teacher, teacher.name AS "teacherName",
         t.room, COALESCE(room.is_computer_room, false) AS "isComputerRoom", t.group_num AS "group",
+        t.is_substitution AS "isSubstitution", t.substitution_note AS "substitutionNote",
         COALESCE((
           SELECT jsonb_agg(jsonb_build_object('classCode', lunch.class, 'groups', lunch.groups))
           FROM lunch_classes lunch
           WHERE t.subject = 'oběd' AND lunch.weekday = t.weekday AND lunch.period = t.period
             AND lunch.class <> t.class
         ), '[]'::jsonb) AS "otherLunchClasses"
-      FROM public.timetable t
+      FROM effective_timetable t
       LEFT JOIN public.classes c ON c.code = t.class
       LEFT JOIN public.subjects s ON s.abbrev = t.subject
       LEFT JOIN public.teachers teacher ON teacher.abbrev = t.teacher
@@ -75,11 +78,12 @@ export async function getTimetable(filters: TimetableFilters, mode: TimetableFil
       ORDER BY t.class, t.weekday, t.period, t.group_num NULLS FIRST, t.id
     `, values),
     getPool().query<OptionRow>(`
+      WITH ${effectiveTimetable}
       ${FILTER_KEYS.map((key) => `
         SELECT '${key}' AS key, ${columns[key]} AS value,
           ${key === "subject" || key === "teacher" ? "MAX(metadata.name)" : "NULL::text"} AS name,
           COUNT(*) FILTER (WHERE ${optionWhere(key)})::int AS count
-        FROM public.timetable t
+        FROM effective_timetable t
         ${key === "subject" ? "LEFT JOIN public.subjects metadata ON metadata.abbrev = t.subject" : ""}
         ${key === "teacher" ? "LEFT JOIN public.teachers metadata ON metadata.abbrev = t.teacher" : ""}
         GROUP BY ${columns[key]}
@@ -87,15 +91,16 @@ export async function getTimetable(filters: TimetableFilters, mode: TimetableFil
       UNION ALL
       SELECT 'class', c.code, NULL::text, 0
       FROM public.classes c
-      WHERE NOT EXISTS (SELECT 1 FROM public.timetable t WHERE t.class = c.code)
+      WHERE NOT EXISTS (SELECT 1 FROM effective_timetable t WHERE t.class = c.code)
     `, mode === "advanced" ? values : [filters.class]),
     // Keep the full day for each matching class, even when filters hide earlier lessons.
     getPool().query<LessonRoom>(`
+      WITH ${effectiveTimetable}
       SELECT history.id::text AS id, history.class AS "classCode", history.weekday,
         history.period, history.group_num AS "group", history.room
-      FROM public.timetable history
+      FROM effective_timetable history
       WHERE EXISTS (
-        SELECT 1 FROM public.timetable t
+        SELECT 1 FROM effective_timetable t
         WHERE t.class = history.class AND t.weekday = history.weekday AND ${where()}
       )
     `, values),

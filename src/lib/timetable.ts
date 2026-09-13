@@ -40,6 +40,8 @@ export type TimetableLesson = {
   requiresRoomTransfer: boolean;
   group: number | null;
   otherLunchClasses: LunchClass[];
+  isSubstitution: boolean;
+  substitutionNote: string | null;
 };
 
 export type LessonRoom = Pick<TimetableLesson, "id" | "classCode" | "weekday" | "period" | "group" | "room">;

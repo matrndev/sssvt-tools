@@ -12,11 +12,12 @@ export default async function TimetablePage({ searchParams }: PageProps<"/timeta
   const mode = readTimetableFilterMode(params.mode, filters);
   // The client gate resolves local defaults before querying an unfiltered timetable.
   if (!FILTER_KEYS.some((key) => filters[key].length) && params.view !== "all" && mode !== "advanced") return null;
-  const data = await getTimetable(filters, mode);
+  const showSubstitutions = params.substitutions === "true";
+  const data = await getTimetable(filters, mode, showSubstitutions);
 
   return (
     <main className="mx-auto w-full max-w-300 px-2 sm:px-8">
-      <TimetableExplorer data={data} filters={filters} mode={mode} />
+      <TimetableExplorer data={data} filters={filters} mode={mode} showSubstitutions={showSubstitutions} />
     </main>
   );
 }
