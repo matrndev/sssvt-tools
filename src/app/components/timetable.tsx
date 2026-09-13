@@ -28,7 +28,7 @@ export default function Timetable({
   filterMode = "easy",
 }: TimetableProps) {
   const grid = buildTimetableGrid(lessons);
-  const filterHref = (key: "teacher" | "room", value: string) => {
+  const filterHref = (key: "teacher" | "room" | "class", value: string) => {
     const params = new URLSearchParams({ [key]: value });
     if (filterMode === "advanced") params.set("mode", "advanced");
     return `?${params}`;
@@ -100,9 +100,14 @@ export default function Timetable({
                               </Link>
                             )}
                             {view !== "class" && (
-                              <span title={`Class ${lesson.classCode}`} className="absolute bottom-1 left-1 rounded bg-gray-600/40 p-0.5 text-[9px] leading-3 sm:text-[11px]">
-                                {lesson.classCode}
-                              </span>
+                              <Link
+                                    href={filterHref("class", lesson.classCode)}
+                                    prefetch={false}
+                                    title={`Class ${lesson.classCode}`}
+                                    className={`hover:underline absolute bottom-1 left-1 rounded bg-gray-600/40 p-0.5 text-[9px] leading-3 sm:text-[11px]`}
+                                >
+                                    <span>{lesson.classCode}</span>
+                                </Link>
                             )}
                             {/* {lesson.isComputerRoom && (
                               <span title="Computer room" className="absolute bottom-1 right-1 inline-flex h-4 items-center rounded bg-yellow-600/40 p-0.5 text-[9px] leading-3 sm:text-[11px]">

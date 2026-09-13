@@ -2,10 +2,10 @@
 
 export const FILTER_LABELS = {
   class: "Class",
-  subject: "Subject",
-  teacher: "Teacher",
-  room: "Room",
   group: "Group",
+  room: "Room",
+  teacher: "Teacher",
+  subject: "Subject",
   weekday: "Weekday",
   period: "Period",
 } as const;
@@ -50,7 +50,8 @@ export function updateEasyTimetableFilters(filters: TimetableFilters, key: Filte
   if (key === "group") {
     if (filters.class.length !== 1) return filters;
     next.class = filters.class;
-    next.group = values.length > 0 ? [...new Set([...values, "whole"])] : [];
+    // The implicit whole-class selection must not keep the last group filter active.
+    next.group = values.some((value) => value !== "whole") ? [...new Set([...values, "whole"])] : [];
   } else if (key === "class" || key === "teacher" || key === "room") {
     next[key] = values.slice(0, 1);
     if (key === "class" && next.class[0] === filters.class[0]) next.group = filters.group;
