@@ -20,7 +20,7 @@ type TimetableProps = {
   lessons: TimetableLesson[];
   view?: TimetableView;
   filterMode?: TimetableFilterMode;
-  highlightSubjects?: boolean;
+  showToolbar?: boolean;
   classTeacher?: string | null;
   homeClassroom?: string | null;
 };
@@ -30,8 +30,9 @@ export default function Timetable({
   lessons,
   view = "class",
   filterMode = "easy",
-  highlightSubjects = true,
+  showToolbar = false,
 }: TimetableProps) {
+  const [highlightSubjects, setHighlightSubjects] = useState(true);
   const [hoveredSubject, setHoveredSubject] = useState<string | null>(null);
   const grid = buildTimetableGrid(lessons);
   const filterHref = (key: "teacher" | "room" | "class", value: string) => {
@@ -41,8 +42,20 @@ export default function Timetable({
   };
 
   return (
-    <div className="mt-4 flex min-w-0 max-w-full flex-col gap-4 sm:mt-8 lg:flex-row lg:items-start">
-      <div className="min-w-0 w-full max-w-full flex-1 overflow-x-auto overscroll-x-contain rounded-lg border-slate-500 border text-center" role="region" aria-label={title} tabIndex={0}>
+    <div className="mt-4 min-w-0 w-full max-w-full overflow-hidden rounded-lg border border-slate-500 sm:mt-8">
+      {showToolbar && (
+        <div className="flex justify-end border-b border-slate-500 bg-slate-500/30 px-3 sm:px-4">
+          <button type="button" role="switch" aria-checked={highlightSubjects}
+            onClick={() => setHighlightSubjects((enabled) => !enabled)}
+            className="group/highlight inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-lg px-2 text-left text-xs text-slate-300 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-blue-400 sm:text-sm">
+            <span>Highlight on hover</span>
+            <span aria-hidden="true" className={`flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors ${highlightSubjects ? "bg-blue-400/60 group-hover/highlight:bg-blue-400/70" : "bg-slate-700 group-hover/highlight:bg-slate-600"}`}>
+              <span className={`size-4 rounded-full bg-slate-200 transition-transform motion-reduce:transition-none ${highlightSubjects ? "translate-x-4" : "translate-x-0"}`} />
+            </span>
+          </button>
+        </div>
+      )}
+      <div className="min-w-0 w-full max-w-full overflow-x-auto overscroll-x-contain text-center" role="region" aria-label={title} tabIndex={0}>
         <table className="bg-slate-900 w-full min-w-212 table-fixed border-separate border-spacing-0 text-center text-sm sm:min-w-232 sm:text-base">
           <thead className={"bg-slate-700"}>
             <tr>
