@@ -1,7 +1,7 @@
 ﻿import "server-only";
 
 import { getPool } from "./db";
-import { effectiveTimetableSql } from "./timetable-substitutions";
+import { effectiveTimetableSql, teacherConflictsSql } from "./timetable-substitutions";
 import type { OnboardingClass } from "./onboarding";
 import { compareClasses, getRoomTransfers, PERIODS, WEEKDAYS, type LessonRoom, type TimetableLesson } from "./timetable";
 import { FILTER_KEYS, isTrailingFilterOption, type FilterKey, type FilterOptions, type TimetableFilters, type TimetableFilterMode, type TimetableResult } from "./timetable-filters";
@@ -50,7 +50,7 @@ export async function getTimetable(filters: TimetableFilters, mode: TimetableFil
 
   const [lessons, facets, roomHistory] = await Promise.all([
     getPool().query<Omit<TimetableLesson, "requiresRoomTransfer">>(`
-      WITH ${effectiveTimetable}, lunch_classes AS (
+      WITH ${effectiveTimetable}, ${teacherConflictsSql}, lunch_classes AS (
         SELECT class, weekday, period,
           CASE WHEN bool_or(group_num IS NULL) THEN ARRAY[]::integer[]
             ELSE array_agg(DISTINCT group_num ORDER BY group_num) END AS groups
@@ -63,6 +63,7 @@ export async function getTimetable(filters: TimetableFilters, mode: TimetableFil
         t.subject, s.name AS "subjectName", t.teacher, teacher.name AS "teacherName",
         t.room, COALESCE(room.is_computer_room, false) AS "isComputerRoom", t.group_num AS "group",
         t.is_substitution AS "isSubstitution", t.substitution_note AS "substitutionNote",
+        COALESCE(conflict.conflicts, '[]'::jsonb) AS "teacherConflicts",
         COALESCE((
           SELECT jsonb_agg(jsonb_build_object('classCode', lunch.class, 'groups', lunch.groups))
           FROM lunch_classes lunch
@@ -70,6 +71,7 @@ export async function getTimetable(filters: TimetableFilters, mode: TimetableFil
             AND lunch.class <> t.class
         ), '[]'::jsonb) AS "otherLunchClasses"
       FROM effective_timetable t
+      LEFT JOIN teacher_conflicts conflict ON conflict.id = t.id
       LEFT JOIN public.classes c ON c.code = t.class
       LEFT JOIN public.subjects s ON s.abbrev = t.subject
       LEFT JOIN public.teachers teacher ON teacher.abbrev = t.teacher

@@ -11,6 +11,7 @@ import {
   WEEKDAYS,
   getGroupColor,
   getLunchDescription,
+  getTeacherConflictDescription,
   type TimetableLesson,
   type TimetableView,
 } from "@/lib/timetable";
@@ -39,6 +40,7 @@ export default function Timetable({
   substitutionsPending = false,
 }: TimetableProps) {
   const [highlightSubjects, setHighlightSubjects] = useState(true);
+  const [highlightConflicts, setHighlightConflicts] = useState(false);
   const [hoveredSubject, setHoveredSubject] = useState<string | null>(null);
   const grid = buildTimetableGrid(lessons);
   const filterHref = (key: "teacher" | "room" | "class", value: string) => {
@@ -60,6 +62,14 @@ export default function Timetable({
               <span className={`size-4 rounded-full bg-slate-200 transition-transform motion-reduce:transition-none ${showSubstitutions ? "translate-x-4" : "translate-x-0"}`} />
             </span>
           </button>}
+          <button type="button" role="switch" aria-checked={highlightConflicts}
+            onClick={() => setHighlightConflicts((enabled) => !enabled)}
+            className="group/conflicts inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-lg px-2 text-left text-xs text-slate-300 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-blue-400 sm:text-sm">
+            <span>Highlight teacher conflicts</span>
+            <span aria-hidden="true" className={`flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors ${highlightConflicts ? "bg-red-400/60 group-hover/conflicts:bg-red-400/70" : "bg-slate-700 group-hover/conflicts:bg-slate-600"}`}>
+              <span className={`size-4 rounded-full bg-slate-200 transition-transform motion-reduce:transition-none ${highlightConflicts ? "translate-x-4" : "translate-x-0"}`} />
+            </span>
+          </button>
           <button type="button" role="switch" aria-checked={highlightSubjects}
             onClick={() => setHighlightSubjects((enabled) => !enabled)}
             className="group/highlight inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-lg px-2 text-left text-xs text-slate-300 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-blue-400 sm:text-sm">
@@ -98,7 +108,7 @@ export default function Timetable({
                       >
                         {cell.map((lesson) => (
                           <div key={lesson.id}
-                            title={lesson.isSubstitution ? lesson.substitutionNote || "Changed lesson" : undefined}
+                            title={lesson.isSubstitution ? lesson.substitutionNote || "Cancelled lesson" : lesson.subjectName || undefined}
                             onPointerEnter={(event) => {
                               if (event.pointerType !== "touch") {
                                 setHoveredSubject(highlightSubjects && lesson.subject.trim() && lesson.subject !== "oběd" ? lesson.subject : null);
@@ -106,8 +116,22 @@ export default function Timetable({
                             }}
                             onPointerLeave={() => setHoveredSubject(null)}
                             onPointerCancel={() => setHoveredSubject(null)}
-                            className={`relative flex min-h-0 flex-col items-center justify-center px-1 pt-3 pb-1 text-sm sm:px-2 ${lesson.subject === "oběd" ? "sm:pt-3" : "sm:pt-1"} ${lesson.isSubstitution ? "bg-yellow-500/30" : lesson.subject === "oběd" || lesson.subject === "" ? "bg-slate-900" : "bg-slate-800"}`}>
-                            {lesson.isSubstitution && <span className="sr-only">Substitution{lesson.substitutionNote ? `: ${lesson.substitutionNote}` : ""}. </span>}
+                            className={`relative flex min-h-0 flex-col items-center justify-center px-1 pt-3 pb-1 text-sm sm:px-2 ${lesson.subject === "oběd" ? "sm:pt-3" : "sm:pt-1"} ${highlightConflicts && lesson.teacherConflicts.length ? "bg-red-900 text-white" : lesson.isSubstitution ? "bg-yellow-500/30" : lesson.subject === "oběd" || lesson.subject === "" ? "bg-slate-900" : "bg-slate-800"}`}>
+                            {lesson.isSubstitution && <span className="sr-only">Substitution{lesson.substitutionNote ? `: ${lesson.substitutionNote} ` : ""}. </span>}
+                            {highlightConflicts && lesson.teacherConflicts.length > 0 && <>
+                              {/* <button type="button" popoverTarget={`conflict-${lesson.id}`}
+                                title={getTeacherConflictDescription(lesson.teacherConflicts)}
+                                aria-label={getTeacherConflictDescription(lesson.teacherConflicts)}
+                                className="absolute right-1 bottom-1 z-20 flex size-4 cursor-pointer items-center justify-center rounded-full border border-red-200 bg-red-950 text-xs font-bold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">!</button> */}
+                              <div id={`conflict-${lesson.id}`} popover="auto"
+                                className="fixed inset-0 m-auto h-fit max-h-[80vh] w-80 max-w-[90vw] overflow-auto rounded-lg border border-red-300 bg-slate-950 p-4 text-left text-sm text-white shadow-xl backdrop:bg-black/30">
+                                <p className="font-semibold">Teacher conflict: {lesson.teacherName || lesson.teacher}</p>
+                                <p className="mt-2">{getTeacherConflictDescription(lesson.teacherConflicts)}</p>
+                                {lesson.isSubstitution && <p className="mt-2 text-yellow-200">Substitution: {lesson.substitutionNote || "Changed lesson"}</p>}
+                                <button type="button" popoverTarget={`conflict-${lesson.id}`} popoverTargetAction="hide"
+                                  className="mt-3 cursor-pointer rounded border border-slate-500 px-3 py-1 focus-visible:outline-2 focus-visible:outline-blue-400">Close</button>
+                              </div>
+                            </>}
                             <span
                               aria-hidden="true"
                               className={`pointer-events-none absolute inset-0 z-10 ${highlightSubjects && hoveredSubject === lesson.subject ? "border-2 border-blue-400" : ""}`}
