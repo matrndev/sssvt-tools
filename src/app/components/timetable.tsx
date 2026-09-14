@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import Link from "next/link";
 import type { TimetableFilterMode } from "@/lib/timetable-filters";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faUtensils, faUserXmark } from "@fortawesome/free-solid-svg-icons"
+import { faChevronDown, faSliders, faUtensils, faUserXmark } from "@fortawesome/free-solid-svg-icons"
 import {
   buildTimetableGrid,
   PERIODS,
@@ -83,30 +83,44 @@ export default function Timetable({
   view = "class",
   filterMode = "easy",
   showToolbar = false,
-  showSubstitutions = false,
+  showSubstitutions = true,
   onToggleSubstitutions,
   substitutionsPending = false,
 }: TimetableProps) {
   const [highlightSubjects, setHighlightSubjects] = useState(true);
   const [highlightConflicts, setHighlightConflicts] = useState(false);
   const [showCurrentTime, setShowCurrentTime] = useState(true);
+  const [toolbarExpanded, setToolbarExpanded] = useState(false);
   const [hoveredSubject, setHoveredSubject] = useState<string | null>(null);
+  const toolbarOptionsId = useId();
   const shouldHighlightConflicts = filterMode === "advanced" && highlightConflicts;
   const grid = buildTimetableGrid(lessons);
   const filterHref = (key: "teacher" | "room" | "class", value: string) => {
     const params = new URLSearchParams({ [key]: value });
     if (filterMode === "advanced") params.set("mode", "advanced");
-    if (showSubstitutions) params.set("substitutions", "true");
+    if (!showSubstitutions) params.set("substitutions", "false");
     return `?${params}`;
   };
 
   return (
     <div className="mt-4 min-w-0 w-full max-w-full overflow-hidden rounded-lg border border-slate-500 sm:mt-8">
       {showToolbar && (
-        <div className="flex flex-wrap justify-end gap-x-3 border-b border-slate-500 bg-slate-500/30 px-3 sm:px-4">
+        <div className="border-b border-slate-500 bg-slate-500/30">
+          <button type="button" aria-expanded={toolbarExpanded} aria-controls={toolbarOptionsId}
+            onClick={() => setToolbarExpanded((expanded) => !expanded)}
+            className="flex min-h-11 w-full cursor-pointer items-center justify-between gap-3 px-3 text-left text-sm text-slate-200 transition-colors hover:bg-slate-500/20 hover:text-white focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-blue-400 sm:hidden">
+            <span className="inline-flex items-center gap-2">
+              <FontAwesomeIcon icon={faSliders} aria-hidden="true" className="size-3.5 text-slate-400" />
+              Timetable options
+            </span>
+            <FontAwesomeIcon icon={faChevronDown} aria-hidden="true"
+              className={`size-3 text-slate-400 transition-transform motion-reduce:transition-none ${toolbarExpanded ? "rotate-180" : ""}`} />
+          </button>
+          <div id={toolbarOptionsId}
+            className={`${toolbarExpanded ? "flex" : "hidden"} flex-col gap-1 border-t border-slate-500 px-3 py-1 sm:flex sm:min-h-9 sm:flex-row sm:flex-wrap sm:justify-end sm:gap-x-3 sm:border-t-0 sm:px-4 sm:py-0`}>
           {onToggleSubstitutions && <button type="button" role="switch" aria-checked={showSubstitutions}
             disabled={substitutionsPending} onClick={onToggleSubstitutions}
-            className="group/substitutions mr-auto inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-lg px-2 text-left text-xs text-slate-300 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-blue-400 disabled:cursor-wait disabled:opacity-60 sm:text-sm">
+            className="group/substitutions inline-flex min-h-11 w-full cursor-pointer items-center justify-between gap-2 rounded-lg px-2 text-left text-xs text-slate-300 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-blue-400 disabled:cursor-wait disabled:opacity-60 sm:mr-auto sm:min-h-9 sm:w-auto sm:justify-start sm:text-sm">
             <span>Show substitutions</span>
             <span aria-hidden="true" className={`flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors ${showSubstitutions ? "bg-yellow-400/60 group-hover/substitutions:bg-yellow-400/70" : "bg-slate-700 group-hover/substitutions:bg-slate-600"}`}>
               <span className={`size-4 rounded-full bg-slate-200 transition-transform motion-reduce:transition-none ${showSubstitutions ? "translate-x-4" : "translate-x-0"}`} />
@@ -114,7 +128,7 @@ export default function Timetable({
           </button>}
           {filterMode === "advanced" && <button title="Highlights a lesson if its teacher is in more than one room at the same time" type="button" role="switch" aria-checked={shouldHighlightConflicts}
             onClick={() => setHighlightConflicts((enabled) => !enabled)}
-            className="group/conflicts inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-lg px-2 text-left text-xs text-slate-300 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-blue-400 sm:text-sm">
+            className="group/conflicts inline-flex min-h-11 w-full cursor-pointer items-center justify-between gap-2 rounded-lg px-2 text-left text-xs text-slate-300 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-blue-400 sm:min-h-9 sm:w-auto sm:justify-start sm:text-sm">
             <span>Highlight teacher conflicts</span>
             <span aria-hidden="true" className={`flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors ${shouldHighlightConflicts ? "bg-red-400/60 group-hover/conflicts:bg-red-400/70" : "bg-slate-700 group-hover/conflicts:bg-slate-600"}`}>
               <span className={`size-4 rounded-full bg-slate-200 transition-transform motion-reduce:transition-none ${shouldHighlightConflicts ? "translate-x-4" : "translate-x-0"}`} />
@@ -122,7 +136,7 @@ export default function Timetable({
           </button>}
           <button title="Display a red bar indicating the current time" type="button" role="switch" aria-checked={showCurrentTime}
             onClick={() => setShowCurrentTime((enabled) => !enabled)}
-            className="group/time inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-lg px-2 text-left text-xs text-slate-300 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-blue-400 sm:text-sm">
+            className="group/time inline-flex min-h-11 w-full cursor-pointer items-center justify-between gap-2 rounded-lg px-2 text-left text-xs text-slate-300 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-blue-400 sm:min-h-9 sm:w-auto sm:justify-start sm:text-sm">
             <span>Show current time</span>
             <span aria-hidden="true" className={`flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors ${showCurrentTime ? "bg-blue-400/60 group-hover/time:bg-blue-400/70" : "bg-slate-700 group-hover/time:bg-slate-600"}`}>
               <span className={`size-4 rounded-full bg-slate-200 transition-transform motion-reduce:transition-none ${showCurrentTime ? "translate-x-4" : "translate-x-0"}`} />
@@ -130,12 +144,13 @@ export default function Timetable({
           </button>
           <button type="button" role="switch" aria-checked={highlightSubjects}
             onClick={() => setHighlightSubjects((enabled) => !enabled)}
-            className="group/highlight inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-lg px-2 text-left text-xs text-slate-300 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-blue-400 sm:text-sm">
+            className="group/highlight inline-flex min-h-11 w-full cursor-pointer items-center justify-between gap-2 rounded-lg px-2 text-left text-xs text-slate-300 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-blue-400 sm:min-h-9 sm:w-auto sm:justify-start sm:text-sm">
             <span>Highlight on hover</span>
             <span aria-hidden="true" className={`flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors ${highlightSubjects ? "bg-blue-400/60 group-hover/highlight:bg-blue-400/70" : "bg-slate-700 group-hover/highlight:bg-slate-600"}`}>
               <span className={`size-4 rounded-full bg-slate-200 transition-transform motion-reduce:transition-none ${highlightSubjects ? "translate-x-4" : "translate-x-0"}`} />
             </span>
           </button>
+          </div>
         </div>
       )}
       <div className="min-w-0 w-full max-w-full overflow-x-auto overscroll-x-contain text-center" role="region" aria-label={title} tabIndex={0}>

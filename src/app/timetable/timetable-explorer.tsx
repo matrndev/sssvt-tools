@@ -136,8 +136,8 @@ export default function TimetableExplorer({ data, filters, mode, showSubstitutio
   function toggleSubstitutions() {
     if (isPending) return;
     const url = new URL(window.location.href);
-    if (showSubstitutions) url.searchParams.delete("substitutions");
-    else url.searchParams.set("substitutions", "true");
+    if (showSubstitutions) url.searchParams.set("substitutions", "false");
+    else url.searchParams.delete("substitutions");
     startTransition(() => router.push(`${url.pathname}${url.search}${url.hash}`, { scroll: false }));
   }
 

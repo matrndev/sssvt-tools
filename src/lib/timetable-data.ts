@@ -32,7 +32,7 @@ export async function getOnboardingClasses(): Promise<OnboardingClass[]> {
   return rows.sort((a, b) => compareClasses(a.classCode, b.classCode));
 }
 
-export async function getTimetable(filters: TimetableFilters, mode: TimetableFilterMode = "advanced", showSubstitutions = false): Promise<TimetableResult> {
+export async function getTimetable(filters: TimetableFilters, mode: TimetableFilterMode = "advanced", showSubstitutions = true): Promise<TimetableResult> {
   const effectiveTimetable = effectiveTimetableSql(showSubstitutions);
   const values = FILTER_KEYS.map((key) => filters[key]);
   function where(except?: FilterKey) {
