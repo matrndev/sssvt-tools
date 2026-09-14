@@ -113,6 +113,7 @@ export default function Timetable({
               <FontAwesomeIcon icon={faSliders} aria-hidden="true" className="size-3.5 text-slate-400" />
               Timetable options
             </span>
+            
             <FontAwesomeIcon icon={faChevronDown} aria-hidden="true"
               className={`size-3 text-slate-400 transition-transform motion-reduce:transition-none ${toolbarExpanded ? "rotate-180" : ""}`} />
           </button>

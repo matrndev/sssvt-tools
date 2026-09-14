@@ -165,7 +165,7 @@ export default function TimetableExplorer({ data, filters, mode, showSubstitutio
           }))}
         </div>}
         <div className="mt-4 flex items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+          <div className="flex min-w-0 flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-4">
             <div className="flex min-w-0 flex-col items-start">
               <button type="button" onClick={resetToDefaults} className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-2 text-left text-xs text-slate-300 transition-colors hover:bg-slate-800/60 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-blue-400 sm:text-sm">
                 <FontAwesomeIcon icon={faRotateLeft} aria-hidden="true" className="size-3.5 shrink-0 text-slate-400" /><span>Reset to defaults<Link href={""} className="block text-xs text-slate-400 hover:underline">{preferences.groups.length > 0 ? `${preferences.classCode}, groups ${preferences.groups.join(", ")}` : "whole class"}</Link></span>
