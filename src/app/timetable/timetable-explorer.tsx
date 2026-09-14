@@ -3,7 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCheck, faChevronDown, faRotateLeft, faTrash, faCog } from "@fortawesome/free-solid-svg-icons";
+import { faCheck, faChevronDown, faRotateLeft, faTrash } from "@fortawesome/free-solid-svg-icons";
 import Timetable from "@/app/components/timetable";
 import { defaultTimetableFilters } from "@/lib/onboarding";
 import { useTimetablePreferences } from "./preferences-gate";
@@ -97,7 +97,7 @@ function FilterDropdown({ filterKey, options, selected, onChange, easy = false, 
   );
 }
 
-export default function TimetableExplorer({ data, filters, mode }: { data: TimetableResult; filters: TimetableFilters; mode: TimetableFilterMode }) {
+export default function TimetableExplorer({ data, filters, mode, showSubstitutions }: { data: TimetableResult; filters: TimetableFilters; mode: TimetableFilterMode; showSubstitutions: boolean }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const preferences = useTimetablePreferences();
@@ -131,6 +131,14 @@ export default function TimetableExplorer({ data, filters, mode }: { data: Timet
 
   function toggleMode() {
     replaceFilters(isAdvanced ? defaults : readTimetableFilters({}), isAdvanced ? "easy" : "advanced");
+  }
+
+  function toggleSubstitutions() {
+    if (isPending) return;
+    const url = new URL(window.location.href);
+    if (showSubstitutions) url.searchParams.delete("substitutions");
+    else url.searchParams.set("substitutions", "true");
+    startTransition(() => router.push(`${url.pathname}${url.search}${url.hash}`, { scroll: false }));
   }
 
   function dropdown(key: FilterKey) {
@@ -179,7 +187,9 @@ export default function TimetableExplorer({ data, filters, mode }: { data: Timet
         </div>
       </fieldset>
       <p role="status" className="sr-only">{isPending ? "Updating timetable…" : ""}</p>
-      {lessons.length > 0 ? <Timetable title="Weekly timetable" lessons={lessons} view={filters.class.length === 1 ? "class" : "teacher"} filterMode={mode} showToolbar /> : (
+      <Timetable title="Weekly timetable" lessons={lessons} view={filters.class.length === 1 ? "class" : "teacher"} filterMode={mode} showToolbar
+        showSubstitutions={showSubstitutions} onToggleSubstitutions={toggleSubstitutions} substitutionsPending={isPending} />
+      {lessons.length === 0 && (
         <div className="mt-4 rounded-xl border border-dashed border-slate-700 px-6 py-12 text-center">
           <h2 className="text-lg font-medium">{!hasLessons ? "No timetable data available" : "No lessons match these filters"}</h2>
           <p className="mt-2 text-sm text-slate-400">{!hasLessons ? "The timetable will appear when lessons are available." : "Remove a filter or choose another combination."}</p>

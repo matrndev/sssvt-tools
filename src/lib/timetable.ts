@@ -40,7 +40,18 @@ export type TimetableLesson = {
   requiresRoomTransfer: boolean;
   group: number | null;
   otherLunchClasses: LunchClass[];
+  isSubstitution: boolean;
+  substitutionNote: string | null;
+  teacherConflicts: TeacherConflict[];
 };
+
+export type TeacherConflict = Pick<TimetableLesson, "classCode" | "group" | "subject" | "room">;
+
+export function getTeacherConflictDescription(conflicts: TeacherConflict[]): string {
+  return `Teacher conflict with ${conflicts.map((lesson) =>
+    `${lesson.classCode} (${lesson.group === null ? "whole class" : `group ${lesson.group}`}), ${lesson.subject}, ${lesson.room?.trim() ? `room ${lesson.room}` : "room unknown"}`
+  ).join("; ")}.`;
+}
 
 export type LessonRoom = Pick<TimetableLesson, "id" | "classCode" | "weekday" | "period" | "group" | "room">;
 
